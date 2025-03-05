@@ -5,39 +5,76 @@ import { loadFonts } from "~/utils/fonts"
 import Scrollable from "~/components/Scrollable"
 import AngleDoubleLeft from "~/components/Icons/AngleDoubleLeft"
 import { useStyletron } from "baseui"
-import { SAMPLE_TEMPLATES } from "~/constants/editor"
 import useSetIsSidebarOpen from "~/hooks/useSetIsSidebarOpen"
 import useDesignEditorContext from "~/hooks/useDesignEditorContext"
-import useEditorType from "~/hooks/useEditorType"
-import { loadVideoEditorAssets } from "~/utils/video"
 
 export default function () {
   const editor = useEditor()
   const setIsSidebarOpen = useSetIsSidebarOpen()
   const { setCurrentScene, currentScene } = useDesignEditorContext()
+  const [products, setProducts] = React.useState<any[]>([])
+  const [css] = useStyletron()
+
+  React.useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          "https://dash.brandexperts.ae/dash/product-basic-details/"
+        )
+        const data = await response.json()
+        setProducts(data)
+      } catch (error) {
+        console.error("Error fetching products:", error)
+      }
+    }
+    fetchProducts()
+  }, [])
 
   const loadTemplate = React.useCallback(
-    async (template: any) => {
+    async (product: any) => {
       if (editor) {
-        const fonts: any[] = []
-        template.layers.forEach((object: any) => {
-          if (object.type === "StaticText" || object.type === "DynamicText") {
-            fonts.push({
-              name: object.fontFamily,
-              url: object.fontURL,
-              options: { style: "normal", weight: 400 },
-            })
-          }
-        })
-        const filteredFonts = fonts.filter((f) => !!f.url)
-        if (filteredFonts.length > 0) {
-          await loadFonts(filteredFonts)
+        const template = {
+          id: product.id,
+          name: product.name,
+          layers: [
+            {
+              id: "background",
+              name: "Initial Frame",
+              angle: 0,
+              stroke: null,
+              strokeWidth: 0,
+              left: 0,
+              top: 0,
+              width: parseFloat(product.max_width),
+              height: parseFloat(product.max_height),
+              opacity: 1,
+              originX: "left",
+              originY: "top",
+              scaleX: 1,
+              scaleY: 1,
+              type: "Background",
+              flipX: false,
+              flipY: false,
+              skewX: 0,
+              skewY: 0,
+              visible: true,
+              shadow: null,
+              fill: "#ffffff",
+            },
+          ],
+          frame: {
+            width: parseFloat(product.max_width),
+            height: parseFloat(product.max_height),
+          },
+          preview: product.image1,
+          metadata: {
+            animated: false,
+          },
         }
-
         setCurrentScene({ ...template, id: currentScene?.id })
       }
     },
-    [editor, currentScene]
+    [editor, currentScene, setCurrentScene]
   )
 
   return (
@@ -51,17 +88,36 @@ export default function () {
           padding: "1.5rem",
         }}
       >
-        <Block>Templates</Block>
-
-        <Block onClick={() => setIsSidebarOpen(false)} $style={{ cursor: "pointer", display: "flex" }}>
+        <Block>Products</Block>
+        <Block
+          onClick={() => setIsSidebarOpen(false)}
+          $style={{ cursor: "pointer", display: "flex" }}
+        >
           <AngleDoubleLeft size={18} />
         </Block>
       </Block>
       <Scrollable>
-        <div style={{ padding: "0 1.5rem" }}>
-          <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "1fr 1fr" }}>
-            {SAMPLE_TEMPLATES.map((item, index) => {
-              return <ImageItem onClick={() => loadTemplate(item)} key={index} preview={`${item.preview}?tr=w-320`} />
+        <div className={css({ padding: "0 1.5rem" })}>
+          <div
+            className={css({
+              display: "grid",
+              gap: "0.5rem",
+              gridTemplateColumns: "1fr 1fr",
+            })}
+          >
+            {products.map((product, index) => {
+              const sizeUnit = product.size === "Centimeter" ? "cm" : "m"
+              const dimensions = `${product.max_width}${sizeUnit} × ${product.max_height}${sizeUnit}`
+              
+              return (
+                <ProductItem
+                  key={index}
+                  preview={`${product.image1}?tr=w-320`}
+                  name={product.name}
+                  size={dimensions}
+                  onClick={() => loadTemplate(product)}
+                />
+              )
             })}
           </div>
         </div>
@@ -70,8 +126,19 @@ export default function () {
   )
 }
 
-function ImageItem({ preview, onClick }: { preview: any; onClick?: (option: any) => void }) {
+function ProductItem({
+  preview,
+  name,
+  size,
+  onClick,
+}: {
+  preview: string
+  name: string
+  size: string
+  onClick: () => void
+}) {
   const [css] = useStyletron()
+
   return (
     <div
       onClick={onClick}
@@ -81,54 +148,78 @@ function ImageItem({ preview, onClick }: { preview: any; onClick?: (option: any)
         cursor: "pointer",
         borderRadius: "8px",
         overflow: "hidden",
-        "::before:hover": {
-          opacity: 1,
+        transition: "transform 0.2s ease",
+        ":hover": {
+          transform: "translateY(-2px)",
         },
       })}
     >
+      {/* Image Container */}
       <div
         className={css({
-          backgroundImage: `linear-gradient(to bottom,
-          rgba(0, 0, 0, 0) 0,
-          rgba(0, 0, 0, 0.006) 8.1%,
-          rgba(0, 0, 0, 0.022) 15.5%,
-          rgba(0, 0, 0, 0.047) 22.5%,
-          rgba(0, 0, 0, 0.079) 29%,
-          rgba(0, 0, 0, 0.117) 35.3%,
-          rgba(0, 0, 0, 0.158) 41.2%,
-          rgba(0, 0, 0, 0.203) 47.1%,
-          rgba(0, 0, 0, 0.247) 52.9%,
-          rgba(0, 0, 0, 0.292) 58.8%,
-          rgba(0, 0, 0, 0.333) 64.7%,
-          rgba(0, 0, 0, 0.371) 71%,
-          rgba(0, 0, 0, 0.403) 77.5%,
-          rgba(0, 0, 0, 0.428) 84.5%,
-          rgba(0, 0, 0, 0.444) 91.9%,
-          rgba(0, 0, 0, 0.45) 100%)`,
+          position: "relative",
+          height: "160px",
+          overflow: "hidden",
+        })}
+      >
+        <img
+          src={preview}
+          className={css({
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            verticalAlign: "middle",
+          })}
+          alt={name}
+        />
+
+        {/* Gradient Overlay */}
+        <div
+          className={css({
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "60%",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)",
+          })}
+        />
+      </div>
+
+      {/* Product Info */}
+      <div
+        className={css({
           position: "absolute",
-          top: 0,
+          bottom: 0,
           left: 0,
           right: 0,
-          bottom: 0,
-          opacity: 0,
-          transition: "opacity 0.3s ease-in-out",
-          height: "100%",
-          width: "100%",
-          ":hover": {
-            opacity: 1,
-          },
+          padding: "12px",
+          color: "#ffffff",
         })}
-      ></div>
-      <img
-        src={preview}
-        className={css({
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          pointerEvents: "none",
-          verticalAlign: "middle",
-        })}
-      />
+      >
+        <div
+          className={css({
+            fontSize: "14px",
+            fontWeight: 500,
+            lineHeight: "1.25",
+            marginBottom: "4px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          })}
+        >
+          {name}
+        </div>
+        <div
+          className={css({
+            fontSize: "12px",
+            opacity: 0.9,
+          })}
+        >
+          {size}
+        </div>
+      </div>
     </div>
   )
 }

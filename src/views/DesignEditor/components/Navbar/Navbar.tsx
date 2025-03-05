@@ -23,6 +23,16 @@ const Container = styled<"div", {}, Theme>("div", ({ $theme }) => ({
   alignItems: "center",
 }))
 
+const BetaTag = styled<"span", {}, Theme>("span", ({ $theme }) => ({
+  backgroundColor: "#ff6b6b",
+  color: "white",
+  padding: "2px 6px",
+  borderRadius: "4px",
+  fontSize: "0.8rem",
+  marginLeft: "8px",
+  verticalAlign: "middle",
+}))
+
 export default function () {
   const { setDisplayPreview, setScenes, setCurrentDesign, currentDesign, scenes } = useDesignEditorContext()
   const editorType = useEditorType()
@@ -261,8 +271,9 @@ export default function () {
     // @ts-ignore
     <ThemeProvider theme={DarkTheme}>
       <Container>
-        <div style={{ color: "#ffffff" }}>
+        <div style={{ color: "#ffffff", display: "flex", alignItems: "center" }}>
           <Logo size={36} />
+          <BetaTag>Beta</BetaTag>
         </div>
         <DesignTitle />
         <Block $style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "flex-end" }}>
@@ -301,7 +312,7 @@ export default function () {
               },
             }}
           >
-            Export
+            Add To Cart
           </Button>
           <Button
             size="compact"
