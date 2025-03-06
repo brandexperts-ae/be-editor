@@ -58,7 +58,7 @@ export default function () {
     })
 
     if (currentDesign) {
-      const graphicTemplate: IDesign = {
+      return {
         id: currentDesign.id,
         type: "GRAPHIC",
         name: currentDesign.name,
@@ -66,11 +66,9 @@ export default function () {
         scenes: updatedScenes,
         metadata: {},
         preview: "",
-      }
-      makeDownload(graphicTemplate)
-    } else {
-      console.log("NO CURRENT DESIGN")
+      } as IDesign
     }
+    return null
   }
 
   const parsePresentationJSON = () => {
@@ -94,7 +92,7 @@ export default function () {
     })
 
     if (currentDesign) {
-      const presentationTemplate: IDesign = {
+      return {
         id: currentDesign.id,
         type: "PRESENTATION",
         name: currentDesign.name,
@@ -102,11 +100,9 @@ export default function () {
         scenes: updatedScenes,
         metadata: {},
         preview: "",
-      }
-      makeDownload(presentationTemplate)
-    } else {
-      console.log("NO CURRENT DESIGN")
+      } as IDesign
     }
+    return null
   }
 
   const parseVideoJSON = () => {
@@ -128,7 +124,7 @@ export default function () {
       }
     })
     if (currentDesign) {
-      const videoTemplate: IDesign = {
+      return {
         id: currentDesign.id,
         type: "VIDEO",
         name: currentDesign.name,
@@ -136,22 +132,12 @@ export default function () {
         scenes: updatedScenes,
         metadata: {},
         preview: "",
-      }
-      makeDownload(videoTemplate)
-    } else {
-      console.log("NO CURRENT DESIGN")
+      } as IDesign
     }
+    return null
   }
 
-  const makeDownload = (data: Object) => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data))
-    const a = document.createElement("a")
-    a.href = dataStr
-    a.download = "template.json"
-    a.click()
-  }
-
-  const makeDownloadTemplate = async () => {
+  const getDesignData = () => {
     if (editor) {
       if (editorType === "GRAPHIC") {
         return parseGraphicJSON()
@@ -160,6 +146,50 @@ export default function () {
       } else {
         return parseVideoJSON()
       }
+    }
+    return null
+  }
+
+  const handleAddToCart = async () => {
+    try {
+      // Get design data
+      const designData = getDesignData()
+      if (!designData) {
+        console.error("No design data available")
+        return
+      }
+
+      // Step 1: Get UUID
+      const uuidResponse = await fetch("https://dash.brandexperts.ae/generate-uuid/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!uuidResponse.ok) throw new Error("Failed to get UUID")
+      const { anonymous_uuid } = await uuidResponse.json()
+
+      // Step 2: Save design
+      const saveResponse = await fetch("https://dash.brandexperts.ae/save-design/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          anonymous_uuid,
+          design_data: designData,
+        }),
+      })
+
+      if (!saveResponse.ok) throw new Error("Failed to save design")
+      const responseData = await saveResponse.json()
+
+      // Step 3: Redirect to cart
+      window.location.href = `https://www.brandexperts.ae/cart?id=${responseData.id}`
+    } catch (error) {
+      console.error("Error during add to cart process:", error)
+      // Add error handling UI here if needed
     }
   }
 
@@ -238,9 +268,9 @@ export default function () {
       } else if (data.type === "VIDEO") {
         template = await loadVideoTemplate(data)
       }
-      //   @ts-ignore
+      // @ts-ignore
       setScenes(template.scenes)
-      //   @ts-ignore
+      // @ts-ignore
       setCurrentDesign(template.design)
     },
     [editor]
@@ -302,7 +332,7 @@ export default function () {
 
           <Button
             size="compact"
-            onClick={makeDownloadTemplate}
+            onClick={handleAddToCart}
             kind={KIND.tertiary}
             overrides={{
               StartEnhancer: {
