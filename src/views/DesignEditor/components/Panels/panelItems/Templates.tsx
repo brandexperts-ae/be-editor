@@ -33,6 +33,10 @@ export default function () {
   const loadTemplate = React.useCallback(
     async (product: any) => {
       if (editor) {
+        // Store the product ID in sessionStorage
+        sessionStorage.setItem("selectedProductId", product.id)
+        console.log("Product ID stored in session:", product.id)
+        
         const template = {
           id: product.id,
           name: product.name,

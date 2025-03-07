@@ -159,6 +159,17 @@ export default function () {
         return
       }
 
+      // Get the product ID from sessionStorage
+      const productId = sessionStorage.getItem("selectedProductId")
+      
+      if (!productId) {
+        console.error("No product selected")
+        alert("Please select a product first")
+        return
+      }
+
+      console.log("Retrieved product ID from session:", productId)
+
       // Step 1: Get UUID
       const uuidResponse = await fetch("https://dash.brandexperts.ae/generate-uuid/", {
         method: "GET",
@@ -170,16 +181,21 @@ export default function () {
       if (!uuidResponse.ok) throw new Error("Failed to get UUID")
       const { anonymous_uuid } = await uuidResponse.json()
 
-      // Step 2: Save design
+      // Step 2: Save design - Include the product ID from sessionStorage
+      const savePayload = {
+        anonymous_uuid,
+        product: productId, // Use the product ID from sessionStorage
+        design_data: designData,
+      }
+      
+      console.log("Sending payload to API:", savePayload)
+      
       const saveResponse = await fetch("https://dash.brandexperts.ae/save-design/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          anonymous_uuid,
-          design_data: designData,
-        }),
+        body: JSON.stringify(savePayload),
       })
 
       if (!saveResponse.ok) throw new Error("Failed to save design")
@@ -189,7 +205,7 @@ export default function () {
       window.location.href = `https://www.brandexperts.ae/cart?id=${responseData.id}`
     } catch (error) {
       console.error("Error during add to cart process:", error)
-      // Add error handling UI here if needed
+      alert("Error adding to cart. Please try again.")
     }
   }
 

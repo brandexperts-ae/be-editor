@@ -28,10 +28,10 @@ export const BASE_ITEMS = [
     name: "Graphics",
   },
 
-  {
-    id: "pixabay",
-    name: "Pixabay",
-  },
+  // {
+  //   id: "pixabay",
+  //   name: "Pixabay",
+  // },
   {
     id: "layers",
     name: "Layers",
